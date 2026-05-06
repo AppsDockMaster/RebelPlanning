@@ -1856,7 +1856,12 @@ class Handler(SimpleHTTPRequestHandler):
             try:
                 html = index_path.read_text(encoding="utf-8")
                 if base_path:
-                    html = html.replace("<head>", f'<head>\n  <base href="{base_path}">', 1)
+                    base_no_slash = base_path.rstrip("/")
+                    html = html.replace(
+                        "<head>",
+                        f'<head>\n  <base href="{base_path}">\n  <script>window.PLANNING_BASE_PATH="{base_no_slash}";</script>',
+                        1
+                    )
                 body = html.encode("utf-8")
                 self.send_response(200)
                 self.send_header("Content-Type", "text/html; charset=utf-8")

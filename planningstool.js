@@ -51,7 +51,7 @@ const state = {
   invoiceSearch: ""
 };
 const API_BASE_CANDIDATES = [
-  "",
+  (typeof window.PLANNING_BASE_PATH !== "undefined" ? window.PLANNING_BASE_PATH : ""),
   "http://127.0.0.1:8000",
   "http://localhost:8000"
 ];
