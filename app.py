@@ -1,5 +1,4 @@
 ﻿#!/usr/bin/env python3
-import cgi
 import io
 import json
 import os
@@ -3108,24 +3107,30 @@ def handle_upload(handler, target_key):
         handler.json_response(500, {"error": "openpyxl niet beschikbaar op de server."})
         return
 
-    # Parse multipart form data
-    form = cgi.FieldStorage(
-        fp=handler.rfile,
-        headers=handler.headers,
-        environ={
-            "REQUEST_METHOD": "POST",
-            "CONTENT_TYPE": content_type,
-            "CONTENT_LENGTH": handler.headers.get("Content-Length", "0"),
-        },
-    )
+    # Parse multipart form data (cgi module removed in Python 3.13)
+    content_length = int(handler.headers.get("Content-Length", "0"))
+    raw_body = handler.rfile.read(content_length)
 
-    confirm = form.getvalue("confirm", "false") == "true"
-    file_item = form["file"] if "file" in form else None
-    if file_item is None or not hasattr(file_item, "file"):
+    import email.parser as _ep
+    msg = _ep.BytesParser().parsebytes(
+        b"Content-Type: " + content_type.encode() + b"\r\n\r\n" + raw_body
+    )
+    fields = {}
+    for part in (msg.get_payload() if isinstance(msg.get_payload(), list) else []):
+        cd = part.get("Content-Disposition", "")
+        name = None
+        for item in cd.split(";"):
+            item = item.strip()
+            if item.startswith("name="):
+                name = item[5:].strip('"')
+        if name:
+            fields[name] = part.get_payload(decode=True)
+
+    confirm = (fields.get("confirm") or b"false").decode() == "true"
+    new_bytes = fields.get("file")
+    if not new_bytes:
         handler.json_response(400, {"error": "Geen bestand gevonden in de upload."})
         return
-
-    new_bytes = file_item.file.read()
     dest_path = DATA_DIR / cfg["filename"]
 
     if confirm:
