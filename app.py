@@ -3147,20 +3147,40 @@ def handle_upload(handler, target_key):
     content_length = int(handler.headers.get("Content-Length", "0"))
     raw_body = handler.rfile.read(content_length)
 
-    import email.parser as _ep
-    msg = _ep.BytesParser().parsebytes(
-        b"Content-Type: " + content_type.encode() + b"\r\n\r\n" + raw_body
-    )
+    # Extract boundary from Content-Type header
+    boundary = None
+    for ct_part in content_type.split(";"):
+        ct_part = ct_part.strip()
+        if ct_part.lower().startswith("boundary="):
+            boundary = ct_part[9:].strip('"')
+            break
+
     fields = {}
-    for part in (msg.get_payload() if isinstance(msg.get_payload(), list) else []):
-        cd = part.get("Content-Disposition", "")
-        name = None
-        for item in cd.split(";"):
-            item = item.strip()
-            if item.startswith("name="):
-                name = item[5:].strip('"')
-        if name:
-            fields[name] = part.get_payload(decode=True)
+    if boundary:
+        delimiter = ("--" + boundary).encode()
+        for part in raw_body.split(delimiter)[1:]:
+            # Stop at closing boundary
+            if part.lstrip(b"\r\n").startswith(b"--"):
+                break
+            if b"\r\n\r\n" not in part:
+                continue
+            raw_headers, body = part.split(b"\r\n\r\n", 1)
+            # Strip trailing \r\n from body
+            if body.endswith(b"\r\n"):
+                body = body[:-2]
+            # Parse Content-Disposition to get field name
+            cd = ""
+            for hline in raw_headers.decode("utf-8", errors="replace").split("\r\n"):
+                if hline.lower().startswith("content-disposition"):
+                    cd = hline
+                    break
+            name = None
+            for item in cd.split(";"):
+                item = item.strip()
+                if item.lower().startswith("name="):
+                    name = item[5:].strip('"')
+            if name:
+                fields[name] = body
 
     confirm = (fields.get("confirm") or b"false").decode() == "true"
     new_bytes = fields.get("file")
