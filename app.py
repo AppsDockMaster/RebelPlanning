@@ -1894,6 +1894,20 @@ class Handler(SimpleHTTPRequestHandler):
             handle_upload(self, parts[2])
             return
 
+        # Temporary DB restore endpoint: POST /api/restore-db?secret=<RESTORE_SECRET>
+        if parts == ["api", "restore-db"]:
+            from urllib.parse import parse_qs
+            secret = parse_qs(urlparse(self.path).query).get("secret", [""])[0]
+            expected = os.environ.get("RESTORE_SECRET", "")
+            if not expected or secret != expected:
+                self.json_response(403, {"error": "Verboden."})
+                return
+            length = int(self.headers.get("Content-Length", "0"))
+            db_bytes = self.rfile.read(length)
+            DB_PATH.write_bytes(db_bytes)
+            self.json_response(200, {"ok": True, "bytes": len(db_bytes)})
+            return
+
         if parts == ["api", "export-ohw"]:
             try:
                 body = self.read_json_body()
