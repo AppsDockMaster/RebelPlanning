@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"import py_compile; py_compile.compile\\(''app.py'', doraise=True\\)\")",
+      "Bash(python3 -c \":*)",
+      "Bash(python3:*)",
+      "Read(//c/Users/vandenbroeckd/Downloads/RPL Tools/Planningstool/**)"
+    ],
+    "additionalDirectories": [
+      "\\tmp"
+    ]
+  }
+}

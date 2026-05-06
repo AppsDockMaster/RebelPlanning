@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \":*)",
+      "Bash(node --check \"c:\\\\Users\\\\vandenbroeckd\\\\Downloads\\\\Planningstool\\\\planningstool.js\")",
+      "Bash(timeout 3 python app.py)",
+      "Bash(start python:*)",
+      "Bash(curl -s http://127.0.0.1:8000/api/consultants)",
+      "Bash(curl -s http://localhost:8000/api/analysis/timesheets)",
+      "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); rows=d.get\\(''''internalRows'''',[]\\); print\\(f''''internalRows count: {len\\(rows\\)}''''\\); print\\(''''First 3:'''', json.dumps\\(rows[:3], indent=2\\)\\)\")",
+      "Bash(curl -s http://localhost:8000/api/consultants)",
+      "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); names=[c[''''name''''] for c in d.get\\(''''consultants'''',[]\\)[:5]]; print\\(''''DB consultant names:'''', names\\)\")",
+      "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); rows=d.get\\(''''internalRows'''',[]\\); names=list\\(set\\(r[''''consultant''''] for r in rows\\)\\)[:5]; print\\(''''Internal rows consultant names:'''', names\\)\")"
+    ]
+  }
+}

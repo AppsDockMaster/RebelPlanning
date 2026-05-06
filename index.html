@@ -1,0 +1,717 @@
+﻿<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Consultancy Planner</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="layout app-shell">
+    <aside class="sidebar card">
+      <h2>Navigatie</h2>
+      <button class="nav-btn active" data-tab="consultants">Consultants</button>
+      <button class="nav-btn" data-tab="vakanties">Vakanties</button>
+      <button class="nav-btn" data-tab="offertes">Offertes</button>
+      <button class="nav-btn" data-tab="projecten">Projecten</button>
+      <button class="nav-btn" data-tab="planning">Planning</button>
+      <button class="nav-btn" data-tab="analyse">Analyse</button>
+      <button class="nav-btn" data-tab="pipeline">Pipeline</button>
+      <button class="nav-btn" data-tab="ohw">OHW</button>
+      <button class="nav-btn" data-tab="facturatie">Facturatie</button>
+      <button class="nav-btn" data-tab="bestanden">Bestanden</button>
+    </aside>
+
+    <div class="page-content">
+      <header class="topbar">
+        <h1>Consultancy Planner</h1>
+        <div class="actions"></div>
+      </header>
+
+      <p id="file-status" class="meta">Opslag: SQLite (planning.db)</p>
+
+      <section id="tab-consultants" class="tab-panel">
+        <main class="grid">
+          <section class="card">
+            <h2>Consultant Toevoegen</h2>
+            <form id="consultant-form" class="form-grid">
+              <label>
+                Naam
+                <input id="name" type="text" required placeholder="Dries Van den Broeck" />
+              </label>
+          <label>
+            Indiensttreding
+            <input id="start-date" type="text" required placeholder="dd/mm/jjjj" inputmode="numeric" />
+          </label>
+          <label>
+            Uit dienst
+            <input id="exit-date" type="text" placeholder="dd/mm/jjjj" inputmode="numeric" />
+          </label>
+              <label>
+                Entiteit
+                <select id="entity" required>
+                  <option value="RPL BE">RPL BE</option>
+                  <option value="RPL NL">RPL NL</option>
+                </select>
+              </label>
+              <button type="submit">Consultant toevoegen</button>
+            </form>
+
+            <h3>Consultants</h3>
+            <h4>Filters</h4>
+            <div class="consultant-filters">
+              <label>
+                Status
+                <select id="consultant-status-filter">
+                  <option value="active" selected>Actief</option>
+                  <option value="all">Alles</option>
+                </select>
+              </label>
+              <label>
+                Entiteit
+                <select id="consultant-entity-filter">
+                  <option value="ALL" selected>RPL</option>
+                  <option value="RPL BE">RPL BE</option>
+                  <option value="RPL NL">RPL NL</option>
+                </select>
+              </label>
+            </div>
+            <div id="consultants-list" class="list"></div>
+          </section>
+
+          <div class="consultants-right">
+            <section class="card" id="detail-card">
+              <h2>Details</h2>
+              <p id="no-selection">Selecteer eerst een consultant.</p>
+
+              <div id="details" class="hidden">
+                <div class="meta" id="meta"></div>
+                <form id="consultant-edit-form" class="form-grid compact">
+                  <label>
+                    Indienst
+                    <input id="consultant-edit-start-date" type="text" required placeholder="dd/mm/jjjj" inputmode="numeric" />
+                  </label>
+                  <label>
+                    Uit dienst
+                    <input id="consultant-edit-exit-date" type="text" placeholder="dd/mm/jjjj" inputmode="numeric" />
+                  </label>
+                  <label>
+                    Entiteit
+                    <select id="consultant-edit-entity" required>
+                      <option value="RPL BE">RPL BE</option>
+                      <option value="RPL NL">RPL NL</option>
+                    </select>
+                  </label>
+                  <button type="submit">Opslaan consultant</button>
+                </form>
+                <button id="consultant-delete-btn" type="button" class="danger">Consultant verwijderen</button>
+
+                <div class="split">
+                  <div>
+                    <h3>Functie Historiek</h3>
+                    <form id="role-form" class="form-grid compact">
+                      <label>
+                        Functie
+                        <select id="role" required>
+                          <option value="junior">Junior</option>
+                          <option value="medior">Medior</option>
+                          <option value="senior">Senior</option>
+                          <option value="expert">Expert</option>
+                          <option value="director">Director</option>
+                        </select>
+                      </label>
+                      <label>
+                        Van
+                        <input id="role-from" type="text" required placeholder="dd/mm/jjjj" inputmode="numeric" />
+                      </label>
+                      <label>
+                        Tot (optioneel)
+                        <input id="role-to" type="text" placeholder="dd/mm/jjjj" inputmode="numeric" />
+                      </label>
+                      <button type="submit">Toevoegen functie</button>
+                    </form>
+                    <div id="role-table"></div>
+                  </div>
+
+                  <div>
+                    <h3>Werkregime Historiek</h3>
+                    <form id="regime-form" class="form-grid compact">
+                      <label>
+                        Werkregime (%)
+                        <input id="regime" type="number" min="1" max="100" step="1" required placeholder="100" />
+                      </label>
+                      <label>
+                        Van
+                        <input id="regime-from" type="text" required placeholder="dd/mm/jjjj" inputmode="numeric" />
+                      </label>
+                      <label>
+                        Tot (optioneel)
+                        <input id="regime-to" type="text" placeholder="dd/mm/jjjj" inputmode="numeric" />
+                      </label>
+                      <button type="submit">Toevoegen regime</button>
+                    </form>
+                    <div id="regime-table"></div>
+                  </div>
+                </div>
+                <div class="cost-section">
+                  <h3>Kostprijs Per Jaar</h3>
+                  <form id="cost-form" class="form-grid compact">
+                    <label>
+                      Jaar
+                      <input id="cost-year" type="number" min="1900" max="3000" step="1" required placeholder="2026" />
+                    </label>
+                    <label>
+                      Kostprijs (EUR)
+                      <input id="cost-amount" type="text" required placeholder="0,00" inputmode="decimal" />
+                    </label>
+                    <button type="submit">Toevoegen kostprijs</button>
+                  </form>
+                  <div id="cost-table"></div>
+                </div>
+
+              </div>
+            </section>
+
+            <section class="card chart-card">
+              <div class="chart-panel">
+                <h2>FTE Evolutie</h2>
+                <span id="fte-summary" class="meta">Huidige FTE: 0.00</span>
+              </div>
+              <div class="chart-controls">
+                <label>
+                  Filter entiteit
+                  <select id="fte-entity-filter">
+                    <option value="ALL">RPL</option>
+                    <option value="RPL BE">RPL BE</option>
+                    <option value="RPL NL">RPL NL</option>
+                  </select>
+                </label>
+              </div>
+              <div id="fte-legend" class="legend"></div>
+              <div class="chart-wrapper">
+                <canvas id="fte-chart" height="320"></canvas>
+              </div>
+            </section>
+
+            <section class="card">
+              <h2>Overheadkosten Per FTE</h2>
+              <form id="overhead-form" class="form-grid compact">
+                <label>
+                  Jaar
+                  <input id="overhead-year" type="number" min="1900" max="3000" step="1" required placeholder="2026" />
+                </label>
+                <label>
+                  Entiteit
+                  <select id="overhead-entity" required>
+                    <option value="RPL BE">RPL BE</option>
+                    <option value="RPL NL">RPL NL</option>
+                  </select>
+                </label>
+                <label>
+                  Overheadkost per FTE / jaar (EUR)
+                  <input id="overhead-cost" type="text" required placeholder="0,00" inputmode="decimal" />
+                </label>
+                <button type="submit">Opslaan overheadkost</button>
+              </form>
+              <div id="overhead-table"></div>
+            </section>
+          </div>
+        </main>
+      </section>
+
+      <section id="tab-vakanties" class="tab-panel hidden">
+        <section class="card offer-card">
+          <h2>Vakanties</h2>
+          <section class="offer-section offer-subcard">
+            <h3>1. Nieuwe vakantie</h3>
+            <form id="vacation-form" class="form-grid compact">
+              <label>
+                Consultant (actief)
+                <select id="vacation-consultant" required></select>
+              </label>
+              <label>
+                Startdatum
+                <input id="vacation-start-date" type="text" required placeholder="dd/mm/jjjj" inputmode="numeric" />
+              </label>
+              <label>
+                Einddatum
+                <input id="vacation-end-date" type="text" required placeholder="dd/mm/jjjj" inputmode="numeric" />
+              </label>
+              <button type="submit">Vakantie toevoegen</button>
+            </form>
+          </section>
+          <section class="offer-section offer-subcard">
+            <h3>2. Overzicht vakanties</h3>
+            <div id="vacation-table"></div>
+          </section>
+        </section>
+      </section>
+
+      <section id="tab-offertes" class="tab-panel hidden">
+        <section class="card offer-card">
+          <h2>Offertes</h2>
+          <section class="offer-section offer-subcard">
+            <h3>1. Nieuwe offerte</h3>
+            <form id="offer-form" class="form-grid compact">
+              <label>
+                Offertenaam
+                <input id="offer-name" type="text" required placeholder="Bijv. RFP Data Platform 2026" />
+              </label>
+              <label>
+                Indieningsdatum
+                <input id="offer-submission-date" type="text" required placeholder="dd/mm/jjjj" inputmode="numeric" />
+              </label>
+              <button type="submit">Offerte toevoegen</button>
+            </form>
+          </section>
+
+          <section class="offer-section offer-subcard">
+            <h3>2. Database offertes</h3>
+            <div class="form-grid compact">
+              <label>
+                Filter status
+                <select id="offer-status-filter">
+                  <option value="open" selected>Open</option>
+                  <option value="gewonnen">Gewonnen</option>
+                  <option value="verloren">Verloren</option>
+                  <option value="dropped">Dropped</option>
+                  <option value="geannuleerd">Geannuleerd</option>
+                  <option value="ALL">Alles</option>
+                </select>
+              </label>
+            </div>
+            <div id="offers-table-wrap"></div>
+          </section>
+
+          <section class="offer-section offer-subcard">
+            <h3>3. Detail geselecteerde offerte</h3>
+            <p id="no-offer-selection">Selecteer eerst een offerte.</p>
+            <div id="offer-details" class="hidden">
+              <div id="offer-meta" class="meta"></div>
+
+              <form id="offer-edit-form" class="form-grid compact">
+                <label>
+                  Titel
+                  <input id="offer-edit-name" type="text" required />
+                </label>
+                <label>
+                  Indieningsdatum
+                  <input id="offer-edit-submission-date" type="text" required placeholder="dd/mm/jjjj" inputmode="numeric" />
+                </label>
+                <label>
+                  Status
+                  <select id="offer-edit-status" required>
+                    <option value="open">Open</option>
+                    <option value="gewonnen">Gewonnen</option>
+                    <option value="verloren">Verloren</option>
+                    <option value="dropped">Dropped</option>
+                    <option value="geannuleerd">Geannuleerd</option>
+                  </select>
+                </label>
+                <button type="submit">Opslaan offerte</button>
+              </form>
+
+              <form id="offer-staff-form" class="form-grid">
+                <label>
+                  Consultant
+                  <select id="offer-consultant" required></select>
+                </label>
+                <button type="submit">Consultant toevoegen</button>
+              </form>
+              <div id="offer-allocations-matrix"></div>
+
+              <button id="offer-delete-btn" type="button" class="danger">Offerte verwijderen</button>
+            </div>
+          </section>
+        </section>
+      </section>
+
+      <section id="tab-projecten" class="tab-panel hidden">
+        <section class="card offer-card">
+          <h2>Projecten</h2>
+
+          <section class="offer-section offer-subcard">
+            <h3>1. Project tijdslijn</h3>
+            <p id="project-timeline-summary" class="meta">Lopende projecten: 0</p>
+            <div id="project-timeline-scroll" class="timeline-scroll">
+              <canvas id="project-timeline-chart" height="280"></canvas>
+            </div>
+          </section>
+
+          <section class="offer-section offer-subcard">
+            <h3>2. Nieuw project</h3>
+            <form id="project-form" class="form-grid compact">
+              <label>
+                Projectnummer
+                <input id="project-number" type="text" required placeholder="Bijv. PRJ-2026-001" />
+              </label>
+              <label>
+                Projectnaam
+                <input id="project-name" type="text" required placeholder="Bijv. Implementatie Data Platform" />
+              </label>
+              <label>
+                Startdatum (optioneel)
+                <input id="project-start-date" type="text" placeholder="dd/mm/jjjj" inputmode="numeric" />
+              </label>
+              <label>
+                Opleveringsdatum
+                <input id="project-delivery-date" type="text" required placeholder="dd/mm/jjjj" inputmode="numeric" />
+              </label>
+              <label>
+                Projectleider
+                <select id="project-lead-consultant" required>
+                  <option value="">Selecteer projectleider</option>
+                </select>
+              </label>
+              <label>
+                Type project
+                <select id="project-billing-type" required>
+                  <option value="regie" selected>Regie</option>
+                  <option value="regie_cap">Regie met cap</option>
+                  <option value="fixed">Fixed budget</option>
+                </select>
+              </label>
+              <label id="project-cap-row" class="hidden">
+                Cap (EUR)
+                <input id="project-cap-amount" type="text" placeholder="0,00" inputmode="decimal" />
+              </label>
+              <label>
+                Budget (EUR)
+                <input id="project-budget" type="text" required placeholder="0,00" inputmode="decimal" />
+              </label>
+              <label>
+                Budget voorgaande jaren totaal (optioneel)
+                <input id="project-prev-budget-total" type="text" placeholder="0,00" inputmode="decimal" />
+              </label>
+              <label>
+                Budget komende jaren totaal (optioneel)
+                <input id="project-next-budget-total" type="text" placeholder="0,00" inputmode="decimal" />
+              </label>
+              <button type="submit">Project toevoegen</button>
+            </form>
+          </section>
+
+          <section class="offer-section offer-subcard">
+            <h3>3. Database projecten</h3>
+            <div class="form-grid compact">
+              <label>
+                Filter status
+                <select id="project-status-filter">
+                  <option value="actief" selected>Actief</option>
+                  <option value="on hold">On hold</option>
+                  <option value="afgerond">Afgerond</option>
+                  <option value="geannuleerd">Geannuleerd</option>
+                  <option value="ALL">Alles</option>
+                </select>
+              </label>
+              <label>
+                Filter consultant
+                <select id="project-consultant-filter">
+                  <option value="ALL">Alle consultants</option>
+                </select>
+              </label>
+            </div>
+            <div id="projects-table-wrap"></div>
+          </section>
+
+          <section class="offer-section offer-subcard">
+            <h3>4. Detail geselecteerde project</h3>
+            <p id="no-project-selection">Selecteer eerst een project.</p>
+            <div id="project-details" class="hidden">
+              <div id="project-meta" class="meta"></div>
+
+              <form id="project-edit-form" class="form-grid compact">
+                <label>
+                  Projectnummer
+                  <input id="project-edit-number" type="text" required />
+                </label>
+                <label>
+                  Titel
+                  <input id="project-edit-name" type="text" required />
+                </label>
+                <label>
+                  Startdatum
+                  <input id="project-edit-start-date" type="text" placeholder="dd/mm/jjjj" inputmode="numeric" />
+                </label>
+                <label>
+                  Opleveringsdatum
+                  <input id="project-edit-delivery-date" type="text" required placeholder="dd/mm/jjjj" inputmode="numeric" />
+                </label>
+                <label>
+                  Projectleider
+                  <select id="project-edit-lead-consultant" required>
+                    <option value="">Selecteer projectleider</option>
+                  </select>
+                </label>
+                <label>
+                  Type project
+                  <select id="project-edit-billing-type" required>
+                    <option value="regie">Regie</option>
+                    <option value="regie_cap">Regie met cap</option>
+                    <option value="fixed">Fixed budget</option>
+                  </select>
+                </label>
+                <label>
+                  Budget (EUR)
+                  <input id="project-edit-budget" type="text" required inputmode="decimal" />
+                </label>
+                <label id="project-edit-cap-row" class="hidden">
+                  Cap (EUR)
+                  <input id="project-edit-cap-amount" type="text" placeholder="0,00" inputmode="decimal" />
+                </label>
+                <label>
+                  Budget voorgaande jaren totaal (optioneel)
+                  <input id="project-edit-prev-budget-total" type="text" placeholder="0,00" inputmode="decimal" />
+                </label>
+                <label>
+                  Budget komende jaren totaal (optioneel)
+                  <input id="project-edit-next-budget-total" type="text" placeholder="0,00" inputmode="decimal" />
+                </label>
+                <label>
+                  Status
+                  <select id="project-edit-status" required>
+                    <option value="actief">Actief</option>
+                    <option value="on hold">On hold</option>
+                    <option value="afgerond">Afgerond</option>
+                    <option value="geannuleerd">Geannuleerd</option>
+                  </select>
+                </label>
+                <button type="submit">Opslaan project</button>
+              </form>
+
+              <form id="project-staff-form" class="form-grid">
+                <label>
+                  Consultant
+                  <select id="project-consultant" required></select>
+                </label>
+                <button type="submit">Consultant toevoegen</button>
+              </form>
+              <div id="project-allocations-matrix"></div>
+
+              <button id="project-delete-btn" type="button" class="danger">Project verwijderen</button>
+            </div>
+          </section>
+        </section>
+      </section>
+
+      <section id="tab-planning" class="tab-panel hidden">
+        <section class="card planning-card">
+          <h2>Planning</h2>
+          <div class="form-grid compact">
+            <label>
+              Filter entiteit
+              <select id="planning-entity-filter">
+                <option value="ALL">RPL</option>
+                <option value="RPL BE">RPL BE</option>
+                <option value="RPL NL">RPL NL</option>
+              </select>
+            </label>
+            <button id="planning-refresh-btn" type="button">Vernieuwen</button>
+          </div>
+          <div id="planning-table-wrap"></div>
+        </section>
+
+        <section class="card planning-card">
+          <h2>Capaciteit consultant</h2>
+          <p id="planning-person-meta" class="meta">Klik op een consultant in de planningtabel.</p>
+          <div class="chart-wrapper">
+            <canvas id="planning-person-chart" height="260"></canvas>
+          </div>
+        </section>
+
+        <section class="card planning-card">
+          <h2>Project Tijdslijn Consultant</h2>
+          <p id="planning-project-timeline-meta" class="meta">Klik op een consultant in de planningtabel.</p>
+          <div id="planning-project-timeline-scroll" class="timeline-scroll">
+            <canvas id="planning-project-timeline-chart" height="260"></canvas>
+          </div>
+        </section>
+      </section>
+
+      <section id="tab-analyse" class="tab-panel hidden">
+        <section class="card offer-card">
+          <h2>Analyse Uren & Omzet</h2>
+          <p id="analysis-meta" class="meta">Bron: Employee Timesheet BE.xlsx + Employee Timesheet NL.xlsx (enkel consultants uit tab Consultants)</p>
+          <div class="form-grid compact">
+            <label>
+              Filter entiteit
+              <select id="analysis-entity-filter">
+                <option value="ALL">RPL</option>
+                <option value="RPL BE">RPL BE</option>
+                <option value="RPL NL">RPL NL</option>
+              </select>
+            </label>
+          </div>
+
+          <section class="offer-section offer-subcard">
+            <h3>1. Weekoverzicht Uren Vs Verwachting</h3>
+            <div id="analysis-weekly-table-wrap"></div>
+          </section>
+
+          <section class="offer-section offer-subcard">
+            <h3>2. Overzicht Uren & Omzet</h3>
+            <div class="analysis-charts-grid">
+              <div class="chart-wrapper">
+                <canvas id="analysis-revenue-chart" height="280"></canvas>
+              </div>
+              <div class="chart-wrapper">
+                <canvas id="analysis-mix-chart" height="280"></canvas>
+              </div>
+            </div>
+            <div id="analysis-table-wrap"></div>
+          </section>
+
+          <section class="offer-section offer-subcard">
+            <h3>3. Detail geselecteerde consultant</h3>
+            <p id="analysis-detail-meta" class="meta">Klik op een consultant in de analysetabel.</p>
+            <div class="analysis-detail-actions">
+              <button id="analysis-print-report-btn" type="button" disabled onclick="window.openConsultantPrintReport && window.openConsultantPrintReport()">Print consultantrapport (PDF)</button>
+            </div>
+            <div class="analysis-charts-grid">
+              <div class="chart-wrapper">
+                <canvas id="analysis-consultant-mix-chart" height="260"></canvas>
+              </div>
+              <div class="chart-wrapper">
+                <canvas id="analysis-consultant-monthly-mix-chart" height="260"></canvas>
+              </div>
+            </div>
+            <div class="chart-wrapper">
+              <canvas id="analysis-hours-project-chart" height="260"></canvas>
+            </div>
+            <div id="analysis-detail-table-wrap"></div>
+          </section>
+
+          <section class="offer-section offer-subcard">
+            <h3>4. Interne projecten</h3>
+            <div id="analysis-internal-wrap"></div>
+          </section>
+        </section>
+      </section>
+
+      <section id="tab-pipeline" class="tab-panel hidden">
+        <section class="card planning-card">
+          <h2>Pipeline</h2>
+          <p id="pipeline-meta" class="meta">Verwachte omzet komende 12 maanden op basis van projectplanning.</p>
+          <div class="form-grid compact">
+            <label>
+              Filter entiteit
+              <select id="pipeline-entity-filter">
+                <option value="ALL">RPL</option>
+                <option value="RPL BE">RPL BE</option>
+                <option value="RPL NL">RPL NL</option>
+              </select>
+            </label>
+            <label>
+              Filter consultant
+              <select id="pipeline-consultant-filter">
+                <option value="ALL">Alle consultants</option>
+              </select>
+            </label>
+          </div>
+          <div id="pipeline-legend" class="legend"></div>
+          <div class="chart-wrapper">
+            <canvas id="pipeline-chart" height="320"></canvas>
+          </div>
+          <div id="pipeline-table-wrap"></div>
+        </section>
+      </section>
+
+      <section id="tab-ohw" class="tab-panel hidden">
+        <section class="card planning-card">
+          <h2>OHW (Onderhanden Werk)</h2>
+          <p id="ohw-meta" class="meta">OHW = OHW vorig jaar + gepresteerde omzet - verstuurde facturen.</p>
+          <div class="form-grid compact">
+            <label>
+              Filter entiteit
+              <select id="ohw-entity-filter">
+                <option value="ALL">RPL</option>
+                <option value="RPL BE">RPL BE</option>
+                <option value="RPL NL">RPL NL</option>
+              </select>
+            </label>
+            <button id="ohw-export-btn" type="button">Export OHW Excel (.xlsx)</button>
+          </div>
+          <div id="ohw-summary" class="meta"></div>
+          <div id="ohw-table-wrap"></div>
+        </section>
+      </section>
+      <section id="tab-facturatie" class="tab-panel hidden">
+        <section class="card planning-card">
+          <h2>Facturatie</h2>
+          <p id="facturatie-meta" class="meta">Bron: List of Invoices.xlsx</p>
+          <div class="form-grid compact" id="facturatie-filters">
+            <label>
+              Zoeken
+              <input id="facturatie-search" type="text" placeholder="Zoek op elk veld..." />
+            </label>
+          </div>
+          <div id="facturatie-table-wrap"></div>
+        </section>
+      </section>
+      <section id="tab-bestanden" class="tab-panel hidden">
+        <section class="card">
+          <h2>Excel Bestanden Uploaden</h2>
+          <p class="meta">Upload een bijgewerkt Excel bestand. Je krijgt eerst een preview van de nieuwe en verwijderde rijen voor je bevestigt.</p>
+
+          <div id="upload-panels" style="display:flex;flex-direction:column;gap:1.5rem;margin-top:1rem;">
+
+            <!-- Employee Timesheets BE -->
+            <div class="upload-block" data-target="timesheets-be">
+              <h3>Employee Timesheets BE</h3>
+              <div class="upload-row">
+                <input type="file" accept=".xlsx" class="upload-input" />
+                <button class="btn-secondary upload-preview-btn">Preview</button>
+              </div>
+              <div class="upload-preview-area hidden"></div>
+            </div>
+
+            <!-- Employee Timesheets NL -->
+            <div class="upload-block" data-target="timesheets-nl">
+              <h3>Employee Timesheets NL</h3>
+              <div class="upload-row">
+                <input type="file" accept=".xlsx" class="upload-input" />
+                <button class="btn-secondary upload-preview-btn">Preview</button>
+              </div>
+              <div class="upload-preview-area hidden"></div>
+            </div>
+
+            <!-- List of Invoices -->
+            <div class="upload-block" data-target="invoices">
+              <h3>List of Invoices</h3>
+              <div class="upload-row">
+                <input type="file" accept=".xlsx" class="upload-input" />
+                <button class="btn-secondary upload-preview-btn">Preview</button>
+              </div>
+              <div class="upload-preview-area hidden"></div>
+            </div>
+
+            <!-- List of Projects -->
+            <div class="upload-block" data-target="projects">
+              <h3>List of Projects</h3>
+              <div class="upload-row">
+                <input type="file" accept=".xlsx" class="upload-input" />
+                <button class="btn-secondary upload-preview-btn">Preview</button>
+              </div>
+              <div class="upload-preview-area hidden"></div>
+            </div>
+
+            <!-- Vendor Invoices -->
+            <div class="upload-block" data-target="vendor-invoices">
+              <h3>Vendor Invoices</h3>
+              <div class="upload-row">
+                <input type="file" accept=".xlsx" class="upload-input" />
+                <button class="btn-secondary upload-preview-btn">Preview</button>
+              </div>
+              <div class="upload-preview-area hidden"></div>
+            </div>
+
+          </div>
+        </section>
+      </section>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="planningstool.js"></script>
+</body>
+</html>

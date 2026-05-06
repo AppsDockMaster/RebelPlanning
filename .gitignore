@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.venv/
+*.db
+*.db-shm
+*.db-wal
+# Excel data files (uploaded via the app, not committed to git)
+Employee Timesheets*.xlsx
+List of Invoices*.xlsx
+List of Projects*.xlsx
+Vendor Invoices*.xlsx
+OHW*.xlsx
