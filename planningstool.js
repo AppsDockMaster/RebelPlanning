@@ -103,7 +103,8 @@ const tabPanels = {
   analyse: document.getElementById("tab-analyse"),
   pipeline: document.getElementById("tab-pipeline"),
   ohw: document.getElementById("tab-ohw"),
-  facturatie: document.getElementById("tab-facturatie")
+  facturatie: document.getElementById("tab-facturatie"),
+  bestanden: document.getElementById("tab-bestanden")
 };
 const offerForm = document.getElementById("offer-form");
 const offersTableWrap = document.getElementById("offers-table-wrap");
@@ -6567,6 +6568,96 @@ if (consultantEntityFilter) {
 }
 
 setupSectionToggles("tab-projecten", true);
+
+// ── Upload tab (Bestanden) ─────────────────────────────────────────────────
+
+function initUploadTab() {
+  const blocks = document.querySelectorAll(".upload-block");
+  blocks.forEach(block => {
+    const target = block.dataset.target;
+    const previewBtn = block.querySelector(".upload-preview-btn");
+    const fileInput = block.querySelector(".upload-input");
+    const previewArea = block.querySelector(".upload-preview-area");
+
+    if (!previewBtn || !fileInput || !previewArea) return;
+
+    previewBtn.addEventListener("click", async () => {
+      const file = fileInput.files[0];
+      if (!file) { alert("Selecteer eerst een bestand."); return; }
+
+      previewBtn.disabled = true;
+      previewBtn.textContent = "Laden…";
+      previewArea.classList.remove("hidden");
+      previewArea.innerHTML = "<em>Bezig met verwerken…</em>";
+
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("confirm", "false");
+
+        const base = (typeof window.PLANNING_BASE_PATH !== "undefined" ? window.PLANNING_BASE_PATH : "");
+        const resp = await fetch(`${base}/api/upload/${target}`, { method: "POST", body: formData });
+        const data = await resp.json();
+
+        if (!resp.ok || data.error) {
+          previewArea.innerHTML = `<p class="error">Fout: ${data.error || resp.status}</p>`;
+          return;
+        }
+
+        const added = data.added || [];
+        const removed = data.removed || [];
+        const totalNew = data.total_new ?? added.length;
+        const totalRemoved = data.total_removed ?? removed.length;
+
+        let html = `<p><strong>${data.label}</strong>: <span class="badge badge-green">+${totalNew} nieuw</span> <span class="badge badge-red">-${totalRemoved} verwijderd</span> <span class="badge">${data.unchanged ?? 0} ongewijzigd</span></p>`;
+
+        if (added.length > 0) {
+          html += `<details open><summary><strong>Nieuwe rijen (${totalNew})</strong></summary><div style="overflow-x:auto"><table class="data-table"><thead><tr>${(data.headers||[]).map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${added.slice(0,50).map(row=>`<tr>${(data.headers||[]).map(h=>`<td>${row[h]??""}</td>`).join("")}</tr>`).join("")}</tbody></table></div></details>`;
+        }
+        if (removed.length > 0) {
+          html += `<details><summary><strong>Verwijderde rijen (${totalRemoved})</strong></summary><div style="overflow-x:auto"><table class="data-table"><thead><tr>${(data.headers||[]).map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${removed.slice(0,50).map(row=>`<tr>${(data.headers||[]).map(h=>`<td>${row[h]??""}</td>`).join("")}</tr>`).join("")}</tbody></table></div></details>`;
+        }
+
+        html += `<button class="btn-primary upload-confirm-btn" style="margin-top:0.75rem">Bevestigen & Opslaan</button>`;
+        previewArea.innerHTML = html;
+
+        previewArea.querySelector(".upload-confirm-btn").addEventListener("click", () => confirmUpload(target, file, previewArea));
+      } catch (err) {
+        previewArea.innerHTML = `<p class="error">Netwerkfout: ${err.message}</p>`;
+      } finally {
+        previewBtn.disabled = false;
+        previewBtn.textContent = "Preview";
+      }
+    });
+  });
+}
+
+async function confirmUpload(target, file, previewArea) {
+  const confirmBtn = previewArea.querySelector(".upload-confirm-btn");
+  if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.textContent = "Opslaan…"; }
+
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("confirm", "true");
+
+    const base = (typeof window.PLANNING_BASE_PATH !== "undefined" ? window.PLANNING_BASE_PATH : "");
+    const resp = await fetch(`${base}/api/upload/${target}`, { method: "POST", body: formData });
+    const data = await resp.json();
+
+    if (!resp.ok || data.error) {
+      previewArea.innerHTML += `<p class="error">Fout bij opslaan: ${data.error || resp.status}</p>`;
+      return;
+    }
+
+    previewArea.innerHTML = `<p style="color:green">✓ ${data.message || "Bestand opgeslagen."}</p>`;
+    await loadAll();
+  } catch (err) {
+    previewArea.innerHTML += `<p class="error">Netwerkfout: ${err.message}</p>`;
+  }
+}
+
+initUploadTab();
 setupSectionToggles("tab-analyse", false);
 init();
 
