@@ -1849,6 +1849,23 @@ class Handler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         parsed = urlparse(self.path)
+        # Serve index.html for root, injecting a <base> tag when BASE_PATH is set
+        if parsed.path in ("/", ""):
+            base_path = os.environ.get("BASE_PATH", "")
+            index_path = BASE_DIR / "index.html"
+            try:
+                html = index_path.read_text(encoding="utf-8")
+                if base_path:
+                    html = html.replace("<head>", f'<head>\n  <base href="{base_path}">', 1)
+                body = html.encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+            except OSError:
+                self.send_error(404)
+            return
         if parsed.path == "/api/invoices":
             data = build_invoice_list()
             self.json_response(200, data)
