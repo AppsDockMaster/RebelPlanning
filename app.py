@@ -1913,7 +1913,11 @@ class Handler(SimpleHTTPRequestHandler):
 
         # Upload endpoints: POST /api/upload/{target}
         if len(parts) == 3 and parts[:2] == ["api", "upload"]:
-            handle_upload(self, parts[2])
+            try:
+                handle_upload(self, parts[2])
+            except Exception as e:
+                import traceback
+                self.json_response(500, {"error": f"Server fout: {e}", "trace": traceback.format_exc()})
             return
 
         # Temporary DB restore endpoint: POST /api/restore-db?secret=<RESTORE_SECRET>

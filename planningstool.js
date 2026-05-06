@@ -6597,7 +6597,14 @@ function initUploadTab() {
 
         const base = (typeof window.PLANNING_BASE_PATH !== "undefined" ? window.PLANNING_BASE_PATH : "");
         const resp = await fetch(`${base}/api/upload/${target}`, { method: "POST", body: formData });
-        const data = await resp.json();
+        const rawText = await resp.text();
+        let data;
+        try {
+          data = JSON.parse(rawText);
+        } catch(e) {
+          previewArea.innerHTML = `<p class="error">Server antwoord (${resp.status}): <pre style="white-space:pre-wrap;font-size:0.75rem">${rawText.substring(0, 500)}</pre></p>`;
+          return;
+        }
 
         if (!resp.ok || data.error) {
           previewArea.innerHTML = `<p class="error">Fout: ${data.error || resp.status}</p>`;
